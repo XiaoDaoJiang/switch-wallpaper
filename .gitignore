@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtualenv
+.venv/
+venv/
+ENV/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# VSCode/IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Bing 壁纸缓存
+Bing_Wallpapers/ 
