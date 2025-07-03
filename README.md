@@ -31,7 +31,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 源码运行方法
+## 源码运行
 ```bash
 python src/wallpaper_changer.py
 ```
