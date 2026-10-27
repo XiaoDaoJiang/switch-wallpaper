@@ -1,10 +1,40 @@
 import os
 import sys
 import logging
-from datetime import datetime
+import re
+from datetime import datetime, timedelta
 
 from wallpaper_downloader import download_bing_wallpaper
 from wallpaper_setter import set_wallpaper
+
+RETENTION_DAYS = 30
+
+
+def cleanup_old_wallpapers(wallpaper_folder, current_wallpaper, today=None):
+    """保留含今天在内的最近30天图片，以及当前正在使用的壁纸。"""
+    cutoff = (today or datetime.now().date()) - timedelta(days=RETENTION_DAYS - 1)
+    current_path = os.path.normcase(os.path.abspath(current_wallpaper))
+    logger = logging.getLogger(__name__)
+    try:
+        with os.scandir(wallpaper_folder) as entries:
+            for entry in entries:
+                match = re.fullmatch(r"bing_wallpaper_(\d{8})\.jpg", entry.name)
+                if not match or not entry.is_file(follow_symlinks=False):
+                    continue
+                if os.path.normcase(os.path.abspath(entry.path)) == current_path:
+                    continue
+                try:
+                    image_date = datetime.strptime(match.group(1), '%Y%m%d').date()
+                except ValueError:
+                    continue
+                if image_date < cutoff:
+                    try:
+                        os.remove(entry.path)
+                        logger.info("已清理过期壁纸: %s", entry.path)
+                    except OSError as exc:
+                        logger.warning("清理壁纸失败: %s: %s", entry.path, exc)
+    except OSError as exc:
+        logger.warning("读取壁纸目录失败，跳过清理: %s", exc)
 
 def setup_logging():
     """设置日志记录"""
@@ -60,6 +90,7 @@ def change_wallpaper():
         print(f"发现今天的壁纸文件: {file_path}")
         if set_wallpaper(file_path):
             print(f"使用已存在的壁纸: {file_path}")
+            cleanup_old_wallpapers(wallpaper_folder, file_path)
             return
         else:
             print("设置已存在的壁纸失败，尝试重新下载")
@@ -84,6 +115,7 @@ def change_wallpaper():
         if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
             if set_wallpaper(file_path):
                 print(f"壁纸已更新: {file_path}")
+                cleanup_old_wallpapers(wallpaper_folder, file_path)
             else:
                 print("设置新下载的壁纸失败")
                 # 尝试使用备用壁纸
@@ -106,6 +138,7 @@ def use_fallback_wallpaper(wallpaper_folder):
             latest_wallpaper = os.path.join(wallpaper_folder, wallpaper_files[0])
             if set_wallpaper(latest_wallpaper):
                 print(f"使用备用壁纸: {latest_wallpaper}")
+                cleanup_old_wallpapers(wallpaper_folder, latest_wallpaper)
             else:
                 print("设置备用壁纸也失败")
         else:

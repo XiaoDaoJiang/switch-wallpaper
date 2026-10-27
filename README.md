@@ -47,3 +47,7 @@ pyinstaller --onefile --name BingWallpaperChanger src/wallpaper_changer.py
 
 ## 其他说明
 - 壁纸图片默认保存在`Bing_Wallpapers/`目录。
+- 打包运行时，该目录位于 exe 同级；源码运行时，位于当前工作目录。
+- 每次成功设置壁纸后自动清理，仅保留含当天在内的最近 30 个自然日图片。按 `bing_wallpaper_YYYYMMDD.jpg` 文件名日期判断，当前正在使用的壁纸始终保留（即使超过 30 天）。
+- 清理不递归子目录，不删除日志、其他命名的文件或符号链接；设置壁纸失败时不清理。
+- 保留天数由 `src/wallpaper_changer.py` 中的 `RETENTION_DAYS = 30` 控制，修改后需重新打包 exe 才能生效。
